@@ -68,16 +68,7 @@ const handleLogout = async () => {
           All Reports
         </NavLink>
 
-        {/* All Tips */}
-        <NavLink
-          to="/admin-dashboard/all-tips"
-          className={({ isActive }) =>
-            isActive ? `${base} ${active}` : `${base} hover:bg-gray-800/40`
-          }
-        >
-          <Lightbulb size={20} />
-          All Tips
-        </NavLink>
+
 
       </nav>
 
