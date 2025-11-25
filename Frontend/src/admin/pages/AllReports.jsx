@@ -27,14 +27,22 @@ const AllReports = () => {
   const [filterType, setFilterType] = useState("all");
   const [filterStatus, setFilterStatus] = useState("all");
 
-  // Fetch reports
+  // Fetch and normalize reports
   const fetchReports = async () => {
     try {
-      const res = await api.get("report/get-all-reports/");
+      const res = await api.get("report/get-all-reports");
+
       const data = res.data.data.map((r) => ({
         ...r,
-        localStatus: r.status, // new local var
+        incident_type: r.incidentType,
+        date_time: r.dateTime,
+        location: {
+          ...r.location,
+          display_name: r.location?.displayName,
+        },
+        localStatus: r.status,
       }));
+
       setReports(data);
     } catch (err) {
       console.error(err);
@@ -47,25 +55,21 @@ const AllReports = () => {
     fetchReports();
   }, []);
 
-  // Update status
+  // Update report status
   const updateStatus = async (id, newStatus) => {
     const actionMap = {
       accepted: "accept",
       solved: "solve",
       rejected: "reject",
     };
-
     const action = actionMap[newStatus];
     if (!action) return;
 
     try {
-      await api.post(`admin/report/${id}/${action}/`);
+      await api.post(`admin/report/${id}/${action}`);
 
-      // Update local status instantly
       setReports((prev) =>
-        prev.map((r) =>
-          r.id === id ? { ...r, localStatus: newStatus } : r
-        )
+        prev.map((r) => (r.id === id ? { ...r, localStatus: newStatus } : r))
       );
     } catch (err) {
       console.error(err);
@@ -151,11 +155,13 @@ const AllReports = () => {
         )}
 
         {!loading && filteredReports.length === 0 && (
-          <div className="p-8 text-center text-gray-400">No reports found...</div>
+          <div className="p-8 text-center text-gray-400">
+            No reports found...
+          </div>
         )}
 
         {filteredReports.map((r) => {
-          const currentStatus = r.localStatus || r.status || "pending";
+          const currentStatus = r.localStatus || "pending";
 
           return (
             <div
@@ -166,7 +172,8 @@ const AllReports = () => {
 
               <p className="flex items-center gap-2 text-gray-800 capitalize">
                 <AlertTriangle size={16} className="text-red-500" />
-                {r.incident_type.replace("_", " ")}
+                {INCIDENT_TYPES.find((t) => t.value === r.incident_type)
+                  ?.label || r.incident_type.replace("_", " ")}
               </p>
 
               <p className="text-gray-500 truncate max-w-[200px]">
@@ -199,27 +206,29 @@ const AllReports = () => {
                   {currentStatus.toUpperCase()}
                 </span>
 
-{currentStatus !== "solved" && (
-  <select
-    value={currentStatus}
-    onChange={(e) => updateStatus(r.id, e.target.value)}
-    className="px-2 py-1 text-xs rounded border border-gray-300 bg-white text-gray-700 outline-none focus:border-red-500"
-  >
- 
-    {currentStatus === "pending" && (
-      <option value="pending" disabled>
-        Select Action
-      </option>
-    )}
-  
+                {currentStatus !== "solved" && (
+                  <select
+                    value={currentStatus}
+                    onChange={(e) => updateStatus(r.id, e.target.value)}
+                    className="px-2 py-1 text-xs rounded border border-gray-300 bg-white text-gray-700 outline-none focus:border-red-500"
+                  >
+                    {/* FIX: Add the current "pending" status as a disabled option */}
+                    {currentStatus === "pending" && (
+                      <option value="pending" disabled>
+                        Pending (Select Action)
+                      </option>
+                    )}
 
-    {STATUS_CHOICES.filter((s) => s.value !== "pending").map((s) => (
-      <option key={s.value} value={s.value}>
-        {s.label}
-      </option>
-    ))}
-  </select>
-)}
+                    {/* Render the other options */}
+                    {STATUS_CHOICES.filter((s) => s.value !== "pending").map(
+                      (s) => (
+                        <option key={s.value} value={s.value}>
+                          {s.label}
+                        </option>
+                      )
+                    )}
+                  </select>
+                )}
               </div>
             </div>
           );

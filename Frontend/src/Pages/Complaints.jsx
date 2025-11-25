@@ -1,4 +1,3 @@
-// src/pages/Complaints.jsx
 import React, { useState, useMemo, useEffect } from "react";
 import {
   Search,
@@ -35,20 +34,21 @@ L.Icon.Default.mergeOptions({
     "https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.7.1/images/marker-shadow.png",
 });
 
-// Helper: Transform API report to dashboard format
+// ---------------- Helper: Transform API response ----------------
 const transformIncident = (incident) => ({
   id: incident.id,
-  type: incident.incident_type
+  type: incident.incidentType
     .replace(/_/g, " ")
     .replace(/\b\w/g, (c) => c.toUpperCase()),
-  location: incident.location.display_name,
+  location: incident.location?.displayName || "Unknown",
   details: incident.description,
-  date: incident.date_time,
+  date: incident.dateTime,
   status:
-    incident.status === "accepted"
-      ? "Accepted"
-      : incident.status.charAt(0).toUpperCase() + incident.status.slice(1),
-  coords: [incident.location.latitude, incident.location.longitude],
+    incident.status.charAt(0).toUpperCase() + incident.status.slice(1),
+  coords: [
+    incident.location?.latitude || 0,
+    incident.location?.longitude || 0,
+  ],
 });
 
 export default function Complaints() {
@@ -75,6 +75,7 @@ export default function Complaints() {
     const fetchData = async () => {
       setIsLoading(true);
       try {
+        // Fetch stats
         const statsRes = await api.get("/report/get-report-statistics");
         if (statsRes.data.success) {
           setStats({
@@ -86,8 +87,9 @@ export default function Complaints() {
           });
         }
 
+        // Fetch reports
         const reportsRes = await api.get("/report/get-all-reports");
-        const transformed = reportsRes.data.results.map(transformIncident);
+        const transformed = reportsRes.data.data.map(transformIncident);
         setIncidents(transformed);
       } catch (err) {
         console.error(err);
@@ -123,6 +125,8 @@ export default function Complaints() {
 
   return (
     <div className="flex-1 mt-20 min-h-screen p-6 md:p-10 font-sans">
+      {error && <ErrorMessage message={error} />}
+
       {/* Header */}
       <div className="flex flex-col md:flex-row justify-between items-start md:items-center mb-8">
         <div>
@@ -200,6 +204,7 @@ export default function Complaints() {
             <option>Pending</option>
             <option>Accepted</option>
             <option>Solved</option>
+            <option>Rejected</option>
           </FilterDropdown>
 
           <FilterDropdown
@@ -211,6 +216,9 @@ export default function Complaints() {
             <option>Physical Assault</option>
             <option>Verbal Harassment</option>
             <option>Unsafe Area</option>
+            <option>Stalking</option>
+            <option>Discrimination</option>
+            <option>Other</option>
           </FilterDropdown>
 
           <FilterDropdown
@@ -244,6 +252,7 @@ export default function Complaints() {
     </div>
   );
 }
+
 
 // ---------------- Subcomponents ----------------
 
