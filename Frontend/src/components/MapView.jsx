@@ -1,4 +1,4 @@
-// src/Pages/LiveDashboard.jsx
+
 import React, { useState, useEffect } from "react";
 import {
   MapContainer,
@@ -67,7 +67,7 @@ function MapView({ reports, selectedLocation, setSelectedLocation }) {
     );
 
   const INCIDENT_COLORS = {
-    verbal: "#f97316",
+    verbal_harassment: "#f97316",
     physical_assault: "#ef4444",
     stalking: "#6366f1",
     discrimination: "#8b5cf6",
@@ -100,12 +100,15 @@ function MapView({ reports, selectedLocation, setSelectedLocation }) {
           .map((report) => (
             <Circle
               key={report.id}
-              center={[report.location.latitude, report.location.longitude]}
+              center={[
+                report.location.latitude,
+                report.location.longitude,
+              ]}
               radius={80}
               pathOptions={{
-                color: INCIDENT_COLORS[report.incident_type],
-                fillColor: INCIDENT_COLORS[report.incident_type],
-                fillOpacity: STATUS_OPACITY[report.status],
+                color: INCIDENT_COLORS[report.incidentType] || "#999",
+                fillColor: INCIDENT_COLORS[report.incidentType] || "#999",
+                fillOpacity: STATUS_OPACITY[report.status] || 0.3,
               }}
               eventHandlers={{
                 click: () =>
@@ -118,16 +121,16 @@ function MapView({ reports, selectedLocation, setSelectedLocation }) {
               <Popup>
                 <div className="font-sans">
                   <h3 className="font-bold text-md">
-                    {report.incident_type.replace("_", " ")}
+                    {report.incidentType.replace(/_/g, " ")}
                   </h3>
-                  <p className="text-sm">{report.location.display_name}</p>
+                  <p className="text-sm">{report.location.displayName}</p>
                   <p className="text-xs mt-1 font-medium">
                     Status:{" "}
                     {report.status.charAt(0).toUpperCase() +
                       report.status.slice(1)}
                   </p>
                   <p className="text-xs mt-1">
-                    {new Date(report.date_time).toLocaleString()}
+                    {new Date(report.dateTime).toLocaleString()}
                   </p>
                   <p className="text-sm mt-1">{report.description}</p>
                 </div>
@@ -149,7 +152,7 @@ export default function LiveDashboard() {
 
   const fetchReports = async () => {
     try {
-      const res = await api.get("/report/get-all-reports/");
+      const res = await api.get("/report/get-all-reports");
       setReports(res.data.data || []);
     } catch (err) {
       console.error(err);
@@ -213,7 +216,7 @@ export default function LiveDashboard() {
               <div className="space-y-4">
                 {reports
                   .filter((r) => r.status === "accepted" || r.status === "solved")
-                  .sort((a, b) => new Date(b.date_time) - new Date(a.date_time))
+                  .sort((a, b) => new Date(b.dateTime) - new Date(a.dateTime))
                   .map((report) => (
                     <div
                       key={report.id}
@@ -236,12 +239,12 @@ export default function LiveDashboard() {
 
                       <div>
                         <h4 className="font-semibold">
-                          {report.incident_type.replace("_", " ")}
+                          {report.incidentType.replace(/_/g, " ")}
                         </h4>
 
                         <p className="text-xs text-gray-500 flex items-center gap-1">
                           <Clock size={12} />
-                          {new Date(report.date_time).toLocaleString()}
+                          {new Date(report.dateTime).toLocaleString()}
                         </p>
 
                         <p className="text-sm text-gray-600 mt-1">
@@ -249,7 +252,7 @@ export default function LiveDashboard() {
                         </p>
 
                         <p className="text-xs text-gray-400">
-                          {report.location.display_name}
+                          {report.location.displayName}
                         </p>
                       </div>
                     </div>

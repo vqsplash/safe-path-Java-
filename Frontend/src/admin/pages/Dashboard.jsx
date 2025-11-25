@@ -20,7 +20,8 @@ const Dashboard = () => {
   useEffect(() => {
     const fetchDashboard = async () => {
       try {
-        const res = await api.get("admin/dashboard/summary/");
+        const res = await api.get("admin/dashboard/summary");
+        console.log(res.data);
         setDashboard(res.data);
       } catch (err) {
         console.error(err);
@@ -129,7 +130,7 @@ const Dashboard = () => {
             <p className="font-semibold text-gray-700">#{r.id}</p>
             <p className="flex items-center gap-2 text-gray-800 capitalize">
               <AlertTriangle size={16} className="text-red-400" />
-              {r.incident_type.replace("_", " ")}
+              {/* {r.incident_type.replace("_", " ")} */}
             </p>
             <p className="text-gray-500 truncate max-w-[250px]">{r.description}</p>
             <p className="flex items-center gap-2 text-gray-700 text-sm">
